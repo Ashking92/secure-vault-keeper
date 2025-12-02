@@ -46,10 +46,10 @@ export const FileUploader = () => {
         .from("user_keys")
         .select("public_key")
         .eq("user_id", userData.user.id)
-        .single();
+        .maybeSingle();
 
       if (keyError || !userKeys) {
-        toast.error("Could not retrieve your public key");
+        toast.error("Please generate your encryption keys first");
         setLoading(false);
         return;
       }

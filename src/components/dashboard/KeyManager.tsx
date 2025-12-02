@@ -26,7 +26,7 @@ export const KeyManager = () => {
         .from("user_keys")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       // Check if private key is in localStorage
       const privateKey = getPrivateKey(user.id);
@@ -49,13 +49,18 @@ export const KeyManager = () => {
       const keyPair = await generateKeyPair();
       const exportedKeys = await exportKeys(keyPair);
 
-      // Store public key in database
+      // Store public key in database (upsert to handle existing keys)
       const { error: dbError } = await supabase
         .from("user_keys")
-        .upsert({
-          user_id: user.id,
-          public_key: exportedKeys.publicKey,
-        });
+        .upsert(
+          {
+            user_id: user.id,
+            public_key: exportedKeys.publicKey,
+          },
+          {
+            onConflict: 'user_id',
+          }
+        );
 
       if (dbError) throw dbError;
 
