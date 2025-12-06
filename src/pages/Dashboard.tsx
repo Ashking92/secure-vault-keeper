@@ -9,6 +9,8 @@ import { FileUploader } from "@/components/dashboard/FileUploader";
 import { MyFiles } from "@/components/dashboard/MyFiles";
 import { SharedWithMe } from "@/components/dashboard/SharedWithMe";
 import { KeyManager } from "@/components/dashboard/KeyManager";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { useProfile } from "@/hooks/useProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
@@ -17,6 +19,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { profile } = useProfile();
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -75,14 +78,27 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <ProfileAvatar
+                  avatarUrl={profile?.avatar_url ?? null}
+                  displayName={profile?.display_name ?? null}
+                  email={user?.email}
+                  size="sm"
+                />
+              </button>
+              <Button
+                variant="outline"
+                onClick={handleSignOut}
+                className="gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
