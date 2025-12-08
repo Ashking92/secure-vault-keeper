@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Shield, LogOut } from "lucide-react";
+import { Shield, LogOut, Settings } from "lucide-react";
 import { FileEncryptor } from "@/components/dashboard/FileEncryptor";
 import { FileDecryptor } from "@/components/dashboard/FileDecryptor";
 import { FileUploader } from "@/components/dashboard/FileUploader";
 import { MyFiles } from "@/components/dashboard/MyFiles";
 import { SharedWithMe } from "@/components/dashboard/SharedWithMe";
 import { KeyManager } from "@/components/dashboard/KeyManager";
+import { ActiveShares } from "@/components/dashboard/ActiveShares";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useProfile } from "@/hooks/useProfile";
@@ -81,6 +82,14 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/settings')}
+                aria-label="Settings"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
               <button
                 onClick={() => navigate('/profile')}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -115,9 +124,10 @@ const Dashboard = () => {
           </div>
 
           <Tabs defaultValue="tools" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="tools">Encryption Tools</TabsTrigger>
               <TabsTrigger value="myfiles">My Files</TabsTrigger>
+              <TabsTrigger value="shares">Active Shares</TabsTrigger>
               <TabsTrigger value="shared">Shared With Me</TabsTrigger>
             </TabsList>
 
@@ -144,6 +154,10 @@ const Dashboard = () => {
 
             <TabsContent value="myfiles">
               <MyFiles />
+            </TabsContent>
+
+            <TabsContent value="shares">
+              <ActiveShares />
             </TabsContent>
 
             <TabsContent value="shared">
