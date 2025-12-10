@@ -5,18 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, Share2, Trash2, Loader2, FileText } from "lucide-react";
+import { Download, Share2, Trash2, Loader2, FileText, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ShareQRCode } from "./ShareQRCode";
 import {
   importPrivateKey,
   getPrivateKey,
   decryptKeyWithRSA,
   importAESKey,
   decryptWithAES,
-  importPublicKey,
-  encryptKeyWithRSA,
-  exportAESKey,
 } from "@/lib/crypto";
 
 interface EncryptedFile {
@@ -35,6 +33,10 @@ export const MyFiles = () => {
   const [expirationTime, setExpirationTime] = useState<string>("24h");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+  const [generatedShareId, setGeneratedShareId] = useState<string | null>(null);
+  const [currentFileName, setCurrentFileName] = useState<string>("");
+  const [currentExpiresAt, setCurrentExpiresAt] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     loadFiles();
@@ -108,38 +110,11 @@ export const MyFiles = () => {
     }
   };
 
-  const shareFile = async (fileId: string) => {
-    if (!shareEmail) {
-      toast.error("Please enter an email address");
-      return;
-    }
-
+  const shareFile = async (fileId: string, fileName: string) => {
+    setSharing(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
-
-      // Get the file's encrypted key
-      const { data: fileData, error: fileError } = await supabase
-        .from("encrypted_files")
-        .select("encrypted_key")
-        .eq("id", fileId)
-        .single();
-
-      if (fileError || !fileData) {
-        toast.error("Could not retrieve file data");
-        return;
-      }
-
-      // Get user's private key to decrypt the file's AES key
-      const privateKeyBase64 = getPrivateKey(userData.user.id);
-      if (!privateKeyBase64) {
-        toast.error("Your private key not found");
-        return;
-      }
-
-      // Decrypt the AES key with user's private key
-      const privateKey = await importPrivateKey(privateKeyBase64);
-      const aesKeyBuffer = await decryptKeyWithRSA(fileData.encrypted_key, privateKey);
 
       // Calculate expiration timestamp based on selection
       const now = new Date();
@@ -153,30 +128,39 @@ export const MyFiles = () => {
         expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
 
-      // Get recipient's public key - simplified version (in production, you'd look up by email)
-      // For now, just insert without re-encryption (recipient will need keys)
-      const { error: shareError } = await supabase.from("file_shares").insert({
+      // Create share record with optional email
+      const { data: shareData, error: shareError } = await supabase.from("file_shares").insert({
         file_id: fileId,
         shared_by: userData.user.id,
-        shared_with_email: shareEmail,
-        encrypted_key: null, // Will be updated when recipient has keys
+        shared_with_email: shareEmail || "public",
+        encrypted_key: null,
         expires_at: expiresAt,
-      });
+      }).select().single();
 
       if (shareError) throw shareError;
 
-      const expirationMessage = expirationTime === "never" 
-        ? "" 
-        : ` (expires in ${expirationTime === "24h" ? "24 hours" : expirationTime === "7d" ? "7 days" : "30 days"})`;
-      toast.success(`File shared with ${shareEmail}${expirationMessage}!`);
-      setShareEmail("");
-      setExpirationTime("24h");
-      setShareDialogOpen(false);
-      setCurrentFileId(null);
+      // Set data for QR code display
+      setGeneratedShareId(shareData.id);
+      setCurrentFileName(fileName);
+      setCurrentExpiresAt(expiresAt);
+
+      toast.success("Share link & QR code generated!");
     } catch (error) {
       console.error("Share error:", error);
-      toast.error("Failed to share file");
+      toast.error("Failed to generate share link");
+    } finally {
+      setSharing(false);
     }
+  };
+
+  const resetShareDialog = () => {
+    setShareDialogOpen(false);
+    setCurrentFileId(null);
+    setShareEmail("");
+    setExpirationTime("24h");
+    setGeneratedShareId(null);
+    setCurrentFileName("");
+    setCurrentExpiresAt(null);
   };
 
   const deleteFile = async (id: string) => {
@@ -250,59 +234,83 @@ export const MyFiles = () => {
                   <Download className="w-4 h-4" />
                 </Button>
                 <Dialog open={shareDialogOpen && currentFileId === file.id} onOpenChange={(open) => {
-                  setShareDialogOpen(open);
                   if (open) {
+                    setShareDialogOpen(true);
                     setCurrentFileId(file.id);
                   } else {
-                    setCurrentFileId(null);
-                    setShareEmail("");
-                    setExpirationTime("24h");
+                    resetShareDialog();
                   }
                 }}>
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="outline">
-                      <Share2 className="w-4 h-4" />
+                    <Button size="sm" variant="outline" className="gap-1">
+                      <QrCode className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Share File</DialogTitle>
+                      <DialogTitle className="flex items-center gap-2">
+                        <QrCode className="w-5 h-5" />
+                        Share via QR Code
+                      </DialogTitle>
                       <DialogDescription>
-                        Enter the email address and set an expiration time for this share
+                        Generate a QR code to share this encrypted file
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="recipient@example.com"
-                          value={shareEmail}
-                          onChange={(e) => setShareEmail(e.target.value)}
-                        />
+                    
+                    {generatedShareId ? (
+                      <ShareQRCode
+                        shareId={generatedShareId}
+                        fileName={currentFileName}
+                        expiresAt={currentExpiresAt}
+                      />
+                    ) : (
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Recipient Email (optional)</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="friend@example.com"
+                            value={shareEmail}
+                            onChange={(e) => setShareEmail(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Leave empty to create a public share link
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="expiration">Link Expiration</Label>
+                          <Select value={expirationTime} onValueChange={setExpirationTime}>
+                            <SelectTrigger id="expiration">
+                              <SelectValue placeholder="Select expiration" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="24h">24 Hours</SelectItem>
+                              <SelectItem value="7d">7 Days</SelectItem>
+                              <SelectItem value="30d">30 Days</SelectItem>
+                              <SelectItem value="never">Never Expires</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          onClick={() => shareFile(file.id, file.file_name)}
+                          disabled={sharing}
+                          className="w-full gap-2"
+                        >
+                          {sharing ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <QrCode className="w-4 h-4" />
+                              Generate QR Code
+                            </>
+                          )}
+                        </Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="expiration">Expiration Time</Label>
-                        <Select value={expirationTime} onValueChange={setExpirationTime}>
-                          <SelectTrigger id="expiration">
-                            <SelectValue placeholder="Select expiration" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="24h">24 Hours</SelectItem>
-                            <SelectItem value="7d">7 Days</SelectItem>
-                            <SelectItem value="30d">30 Days</SelectItem>
-                            <SelectItem value="never">Never Expires</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        onClick={() => shareFile(file.id)}
-                        className="w-full"
-                      >
-                        Share File
-                      </Button>
-                    </div>
+                    )}
                   </DialogContent>
                 </Dialog>
                 <Button
