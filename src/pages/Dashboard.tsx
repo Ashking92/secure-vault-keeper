@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, LogOut, Settings, Menu, X, Lock, Unlock } from "lucide-react";
+import { ShieldCheck, LogOut, Settings, Menu, X, Lock, Unlock, ScanLine } from "lucide-react";
 import { FileUploader } from "@/components/dashboard/FileUploader";
 import { MyFiles } from "@/components/dashboard/MyFiles";
 import { KeyManager } from "@/components/dashboard/KeyManager";
+import { QRScanner } from "@/components/dashboard/QRScanner";
 import { ActiveShares } from "@/components/dashboard/ActiveShares";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -189,7 +190,7 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <FileUploader />
                 
-                {/* Encrypt/Decrypt Navigation Cards */}
+                {/* Encrypt/Decrypt/Scanner Cards */}
                 <div className="space-y-4">
                   <Card 
                     className="shadow-card cursor-pointer hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/50"
@@ -232,6 +233,8 @@ const Dashboard = () => {
                       </Button>
                     </CardContent>
                   </Card>
+
+                  <QRScanner />
                 </div>
               </div>
               
