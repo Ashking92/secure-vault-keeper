@@ -11,8 +11,8 @@ import {
   encryptWithAES,
   importPublicKey,
   encryptKeyWithRSA,
-  getPrivateKey,
-} from "@/lib/crypto";
+  getPrivateKey } from
+"@/lib/crypto";
 
 export const FileUploader = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -42,11 +42,11 @@ export const FileUploader = () => {
       }
 
       // Get user's public key from database
-      const { data: userKeys, error: keyError } = await supabase
-        .from("user_keys")
-        .select("public_key")
-        .eq("user_id", userData.user.id)
-        .maybeSingle();
+      const { data: userKeys, error: keyError } = await supabase.
+      from("user_keys").
+      select("public_key").
+      eq("user_id", userData.user.id).
+      maybeSingle();
 
       if (keyError || !userKeys) {
         toast.error("Please generate your encryption keys first");
@@ -89,7 +89,7 @@ export const FileUploader = () => {
         file_name: file.name,
         file_size: file.size,
         encrypted_key: encryptedAESKey, // AES key encrypted with RSA
-        encrypted_data: encryptedBase64,
+        encrypted_data: encryptedBase64
       });
 
       if (error) throw error;
@@ -106,48 +106,48 @@ export const FileUploader = () => {
 
   return (
     <Card className="bg-card shadow-card border-border">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="w-5 h-5 text-primary" />
-          Upload & Encrypt File
-        </CardTitle>
-        <CardDescription>
-          Upload a file to encrypt and store securely
-        </CardDescription>
-      </CardHeader>
+      
+
+
+
+
+
+
+
+
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Input
             type="file"
             onChange={handleFileSelect}
             accept="*/*"
-            className="cursor-pointer"
-          />
-          {file && (
-            <p className="text-sm text-muted-foreground">
+            className="cursor-pointer" />
+
+          {file &&
+          <p className="text-sm text-muted-foreground">
               Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
             </p>
-          )}
+          }
         </div>
 
         <Button
           onClick={encryptAndUpload}
           disabled={!file || loading}
-          className="w-full"
-        >
-          {loading ? (
-            <>
+          className="w-full">
+
+          {loading ?
+          <>
               <Loader2 className="w-4 h-4 animate-spin" />
               Encrypting...
-            </>
-          ) : (
-            <>
+            </> :
+
+          <>
               <Upload className="w-4 h-4" />
               Encrypt & Upload
             </>
-          )}
+          }
         </Button>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
