@@ -104,50 +104,44 @@ export const FileUploader = () => {
     }
   };
 
-  return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  return (
+    <Card className="bg-card shadow-card border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="w-5 h-5 text-primary" />
+          Upload & Encrypt
+        </CardTitle>
+        <CardDescription>Select a file to encrypt and store securely</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Input
+          type="file"
+          onChange={handleFileSelect}
+          className="cursor-pointer"
+        />
+        {file && (
+          <div className="text-sm text-muted-foreground">
+            Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
+          </div>
+        )}
+        <Button
+          onClick={encryptAndUpload}
+          disabled={!file || loading}
+          className="w-full gap-2"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Encrypting...
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4" />
+              Encrypt & Upload
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 };
