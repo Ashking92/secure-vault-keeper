@@ -8,16 +8,12 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
-import DownloadShare from "./pages/DownloadShare";
-import Encrypt from "./pages/Encrypt";
-import Decrypt from "./pages/Decrypt";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-  
   return (
     <div key={location.pathname} className="animate-page-in">
       <Routes location={location}>
@@ -26,10 +22,6 @@ const AnimatedRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/encrypt" element={<Encrypt />} />
-        <Route path="/decrypt" element={<Decrypt />} />
-        <Route path="/download/:shareId" element={<DownloadShare />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
