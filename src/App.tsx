@@ -12,6 +12,7 @@ import DownloadShare from "./pages/DownloadShare";
 import Encrypt from "./pages/Encrypt";
 import Decrypt from "./pages/Decrypt";
 import NotFound from "./pages/NotFound";
+import PawCare from "./pages/PawCare";
 
 const queryClient = new QueryClient();
 
