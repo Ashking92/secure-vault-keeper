@@ -104,34 +104,9 @@ export const AuthForm = () => {
     }
   };
 
-  const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-      {/* Background layers */}
-      <div className="absolute inset-0 bg-background" />
-      <div className="absolute inset-0 bg-cyber-grid opacity-20" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[120px]" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-primary-glow/5 rounded-full blur-[100px]" />
-
-      <div className="relative z-10 w-full max-w-md">
-        {/* Branding */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-primary shadow-glow mb-4 animate-glow-pulse">
-            <ShieldCheck className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold">
-            <span className="text-foreground">Secure</span>
-            <span className="text-gradient">Vault</span>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Personal Data Protection System</p>
-        </div>
-
-        {/* Glass card */}
-        <div className="glass-strong rounded-2xl p-6 sm:p-8">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
+  return (
+    <AuthWrapper>
+      {showResetPassword ? (
 
   if (showResetPassword) {
     return (
