@@ -16,27 +16,43 @@ export const QRScanner = () => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<string>("qr-reader-" + Math.random().toString(36).slice(2));
 
-  const startScanning = async () => {
+  const [shouldStartCamera, setShouldStartCamera] = useState(false);
+
+  const startScanning = () => {
     setStatus("scanning");
     setErrorMessage("");
-    try {
-      const scanner = new Html5Qrcode(containerRef.current);
-      scannerRef.current = scanner;
-
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
-        (decodedText) => {
-          handleScanResult(decodedText);
-        },
-        () => {}
-      );
-    } catch (error) {
-      console.error("Camera error:", error);
-      toast.error("Could not access camera. Please grant camera permissions.");
-      setStatus("idle");
-    }
+    setShouldStartCamera(true);
   };
+
+  // Start camera AFTER the DOM element is rendered
+  useEffect(() => {
+    if (!shouldStartCamera || status !== "scanning") return;
+    setShouldStartCamera(false);
+
+    const initCamera = async () => {
+      try {
+        const scanner = new Html5Qrcode(containerRef.current);
+        scannerRef.current = scanner;
+
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+          (decodedText) => {
+            handleScanResult(decodedText);
+          },
+          () => {}
+        );
+      } catch (error) {
+        console.error("Camera error:", error);
+        toast.error("Camera access denied or not available. Please grant camera permissions.");
+        setStatus("idle");
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(initCamera, 100);
+    return () => clearTimeout(timer);
+  }, [shouldStartCamera, status]);
 
   const stopScanning = async () => {
     try {
